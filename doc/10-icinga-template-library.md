@@ -425,7 +425,7 @@ disk\_ignore\_eregi\_path | **Optional.** Regular expression to ignore selected 
 disk\_ignore\_ereg\_path  | **Optional.** Regular expression to ignore selected path or partition. Multiple regular expression strings must be defined as array.
 disk\_timeout             | **Optional.** Seconds before connection times out (default: 10).
 disk\_units               | **Optional.** Choose bytes, kB, MB, GB, TB.
-disk\_exclude\_type       | **Optional.** Ignore all filesystems of indicated type. Multiple regular expression strings must be defined as array. Defaults to "none", "tmpfs", "sysfs", "proc", "configfs", "devtmpfs", "devfs", "mtmfs", "tracefs", "cgroup", "fuse.gvfsd-fuse", "fuse.gvfs-fuse-daemon", "fdescfs", "overlay", "nsfs", "squashfs".
+disk\_exclude\_type       | **Optional.** Ignore all filesystems of indicated type. Multiple regular expression strings must be defined as array. Defaults to "none", "tmpfs", "sysfs", "proc", "configfs", "devtmpfs", "devfs", "mtmfs", "tracefs", "cgroup", "fuse.\*" (only Monitoring Plugins support this so far), "fuse.gvfsd-fuse", "fuse.gvfs-fuse-daemon", "fuse.sshfs", "fdescfs", "overlay", "nsfs", "squashfs".
 disk\_include\_type       | **Optional.** Check only filesystems of indicated type. Multiple regular expression strings must be defined as array.
 disk\_inode\_perfdata     | **Optional.** Display inode usage in perfdata
 
@@ -622,7 +622,7 @@ ping_wpl        | **Optional.** The packet loss warning threshold in %. Defaults
 ping_crta       | **Optional.** The RTA critical threshold in milliseconds. Defaults to 5000.
 ping_cpl        | **Optional.** The packet loss critical threshold in %. Defaults to 100.
 ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
-ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
+ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 10.
 
 
 ### hostalive4 <a id="plugin-check-command-hostalive4"></a>
@@ -5834,8 +5834,8 @@ ssl_cert_proxy                | **Optional.** Proxy server to use for connecting
 ssl_cert_file                 | **Optional.** Local file path. Works only if `ssl_cert_address` is set to "localhost".
 ssl_cert_warn                 | **Optional.** Minimum number of days a certificate has to be valid.
 ssl_cert_critical             | **Optional.** Minimum number of days a certificate has to be valid to issue a critical status.
-ssl_cert_cn                   | **Optional.** Pattern to match the CN of the certificate.
-ssl_cert_altnames             | **Optional.** Matches the pattern specified in -n with alternate
+ssl_cert_maximum_validity     | **Optional.** Maximum number of days a certificate is allowed to be valid (default: 397)
+ssl_cert_cn                   | **Optional.** Pattern to match the CN or AltName of the certificate.
 ssl_cert_issuer               | **Optional.** Pattern to match the issuer of the certificate.
 ssl_cert_org                  | **Optional.** Pattern to match the organization of the certificate.
 ssl_cert_email                | **Optional.** Pattern to match the email address contained in the certificate.
