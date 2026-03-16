@@ -7,6 +7,119 @@ documentation before upgrading to a new release.
 
 Released closed milestones can be found on [GitHub](https://github.com/Icinga/icinga2/milestones?state=closed).
 
+## 2.16.0 (2026-04-23)
+
+With this release the license of the project was updated to GPLv3 or later (#10700).
+
+In this release we've added the `OTLPMetricsWriter`, a new perfdata writer targeting backends that support the
+OpenTelemetry protocol. We recommend users to replace other perfdata writers with this one if possible, especially
+`ElasticsearchWriter`, which is now deprecated and scheduled for removal in v2.18.
+
+Another big improvement is the addition of streaming support to our HTTP handlers. Most handlers now use chunked
+encoding to reduce the amount of the generated JSON document that has to be kept in memory at any one time. Some
+endpoints, notably `v1/objects/query`, will also start to stream the response immediately, as the results are processed.
+This should solve most of the memory issues users were seeing when using the Icinga 2 API on large clusters.
+
+We've also redone our Docker images with this version, with some changes to how the `/data` directory is mounted and
+initialized, so make sure you read the new documentation page for
+[installing Icinga 2 in containers](https://icinga.com/docs/icinga-2/latest/doc/02-installation/For-Container).
+
+Below is a summary of the changes relevant for our users. For the complete list of issues and PRs, please see the
+[milestone on GitHub](https://github.com/Icinga/icinga2/issues?q=is%3Aclosed+milestone%3A2.16.0).
+
+### Notes
+
+Thanks to all contributors:
+[brad0](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Abrad0),
+[cjsoftuk](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Acjsoftuk),
+[Donien](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3ADonien),
+[Egor-OSSRevival](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3AEgor-OSSRevival),
+[ETES-Stuttgart](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3AETES-Stuttgart),
+[freaknils](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Afreaknils),
+[martialblog](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Amartialblog),
+[Napsty](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3ANapsty),
+[RincewindsHat](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3ARincewindsHat),
+[Tqnsls](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3ATqnsls),
+[w1ll-i-code](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Aw1ll-i-code),
+[ymartin-ovh](https://github.com/Icinga/icinga2/pulls?q=is%3Apr+is%3Aclosed+milestone%3A2.16.0+author%3Aymartin-ovh)
+
+### Deprecations
+
+Features newly deprecated in this version:
+* `ElasticsearchWriter` (please use the new `OTLPMetricsWriter` instead)
+* User declared namespace objects (i.e. `namespace foo {}`)
+
+We've scheduled these features for removal in v2.18 (#10734).
+
+These features have already been deprecated and will also be removed in v2.18:
+* `IdoMySqlConnection`
+* `IdoPgsqlConnection`
+* `CompatLogger`
+* `ExternalCommandListener`
+* `LivestatusListener`
+* Windows check-plugins (i.e. `check_*.exe`) and `CheckCommand`s (please use our [PowerShell Plugins](https://github.com/Icinga/icinga-powershell-plugins) instead)
+
+We will also no longer provide 32bit Windows MSIs via Chocolatey (#10757).
+
+### Enhancements
+
+* OTLPMetricsWriter: A new perfdata writer for the OpenTelemetry protocol: #10685, #10789, and #10800
+* HTTP API-handlers now stream results via chunked encoding where possible: #10554, #10692, #10516, and #10414
+* Rework docker images build: #10505, #10666, and #10738
+* Better debug log messages for dependencies with non-existing parents or children: #10737
+* No longer require the unused `queue` parameter for `v1/events`: #10495
+* Allow UID/GID values in `ICINGA2_USER` and `ICINGA2_GROUP` environment variables: #10538
+* Add `messages_received_per_type` attribute to endpoints: #10387
+* Better error messages on Redis® connection errors: #10727
+* New node-setup command option `--no-default-global-zones`: #10028
+* Warn on problematic object names: #10770
+* New config option `http_response_headers` for ApiListener that allows to set arbitrary HTTP-headers that will be sent
+  back with responses: #10563, #10664, and #10662
+
+### Bugfixes
+
+* Fix a race condition in the `v1/console` handler: #10681 and #10675
+* InfluxDBWriter: Print full HTTP error body when request fails: #10560
+* Fix a crash when querying objects that are simultaneously deleted: #10698
+* Fix a race condition leading to double notifications: #10628
+* Improve BSD support: #10641, #10640, #10638, and #10635
+* TimePeriod: Properly validate `ranges` field: #10633
+* Fix recovery notifications outside time period being lost: #10613
+* Prevent worst-case exponential complexity in dependency evaluation: #10523
+* Fix double-free error in `posix_error::what()`: #10558
+* Fix expiry times not applying correctly to Acknowledgements via ExternalCommandProcessor: #10486
+* Fix dropped or stalled connections blocking Icinga 2 shutdown on all perfdata writers: #10668 and #10799
+* Fix misleading TLS handshake error logging: #10798
+* SELinux: Allow to query attrs of a filesystem: #10726
+
+### ITL
+
+* Support for the `check_smart` plugin: #8041
+* Add `ssl_cert_long_output` option to `check_ssl_cert` plugin: #10526
+* Enhanced SMART attributes monitoring plugin check configuration with more parameters: #10564
+* Add plain fping CheckCommand to ITL: #10494
+* Remove clear variable from disk CheckCommand: #10531
+* Add a check command for NETGEAR monitoring: #10753
+
+### Optimizations
+
+* Several performance optimizations for the Redis® connection: #10391, #10732, and #10744
+* IcingaDB: Better config and state update queueing: #10619
+* Freeze registries after startup: #10388
+* Small code and performance optimizations in `Log` class: #10504
+* Improved efficiency of the `CpuBoundWork` implementation: #9990 and #10795
+
+### Miscellaneous
+
+* Documentation Improvements: #10481, #10493, #10501, #10513, #10514, #10683, #10686, #10702, and #10745
+* Code Quality Improvements: #9411, #10609, #9728, #9729, #9730, #10499, #10552, #10693, #10715, #10716, and #10756
+* Unit-Test Improvements: #10350, #10528, #10561, #10749, #10550, #10767, and #10776
+
+### Windows
+
+* OpenSSL shipped on Windows updated to 3.5.6: #10786
+* Boost version shipped on Windows updated to 1.90: #10669
+
 ## 2.15.2 (2026-01-29)
 
 This security release fixes a problem in the Icinga 2 Windows MSI that did not
