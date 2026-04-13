@@ -353,7 +353,7 @@ void OTel::ExportLoop(boost::asio::yield_context& yc)
 				// indicate a broken connection and force a reconnect in those cases. For the `end_of_stream` case,
 				// we downgrade the log severity to debug level since this is a normal occurrence when using an OTEL
 				// collector compatible backend that don't honor keep-alive connections (e.g., OpenSearch Data Prepper).
-				if (m_Stopped || (ser && ser->code() == http::error::end_of_stream)) {
+				if (m_Stopped || (ser && (ser->code() == http::error::end_of_stream || ser->code() == boost::asio::error::broken_pipe))) {
 					severity = LogDebug;
 				}
 				Log{severity, "OTelExporter", DiagnosticInformation(ex, false)};
