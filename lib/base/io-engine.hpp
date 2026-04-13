@@ -237,7 +237,7 @@ public:
 	Timeout(boost::asio::io_context::strand& strand, const Timer::duration_type& timeoutFromNow, OnTimeout onTimeout)
 		: m_Timer(strand.context(), timeoutFromNow), m_Cancelled(Shared<Atomic<bool>>::Make(false))
 	{
-		VERIFY(strand.running_in_this_thread());
+		ASSERT(strand.running_in_this_thread());
 
 		m_Timer.async_wait(boost::asio::bind_executor(
 			strand, [cancelled = m_Cancelled, onTimeout = std::move(onTimeout)](boost::system::error_code ec) {
