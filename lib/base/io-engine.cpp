@@ -30,7 +30,7 @@ using namespace icinga;
 CpuBoundWork::CpuBoundWork(boost::asio::yield_context yc, boost::asio::io_context::strand& strand)
 	: m_Done(false)
 {
-	VERIFY(strand.running_in_this_thread());
+	VERIFY(IoEngine::IsStrandRunningOnThisThread(strand));
 
 	auto& ie (IoEngine::Get());
 	Shared<AsioConditionVariable>::Ptr cv;
