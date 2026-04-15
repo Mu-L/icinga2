@@ -3,6 +3,7 @@
 
 #include "icingadb/icingadb.hpp"
 #include "base/logger.hpp"
+#include "base/perfdatavalue.hpp"
 #include <vector>
 
 using namespace icinga;
@@ -47,16 +48,42 @@ void IcingaDB::PendingItemsThreadProc()
 	// Redis queries when the Redis connection is saturated.
 	constexpr std::size_t maxPendingQueries = 128;
 	// The minimum age an item must have before it can be processed.
-	constexpr ch::milliseconds minItemAge{300};
+	constexpr auto minItemAge{300ms};
 
 	std::unique_lock lock(m_PendingItemsMutex);
 	// Wait until the initial config dump is done. IcingaDB::OnConnectedHandler will notify us once it's finished.
 	while (GetActive() && !m_ConfigDumpDone) m_PendingItemsCV.wait(lock);
 
+	// The regular interval at which to log the statistics about the pending items queue.
+	constexpr auto logInterval{5min};
+	// The interval at which to log the statistics about the pending items when the worker is under heavy load.
+	constexpr auto heavyLoadLogInterval{10s};
+	auto lastLogTime = ch::steady_clock::now();
+
 	auto& seqView = m_PendingItems.get<1>();
 	while (GetActive()) {
+		auto now = ch::steady_clock::now();
+		auto elapsed{now - lastLogTime};
+		bool laggingBehind{!seqView.empty() && seqView.front().EnqueueTime + minItemAge < now - 5s};
+		// Log pending items stats at regular intervals, and more frequently when we're lagging behind to
+		// make the user aware of the situation as that's usually an indication of something being wrong.
+		if (elapsed >= logInterval || (laggingBehind && elapsed >= heavyLoadLogInterval)) {
+			lastLogTime = now;
+			Log log(laggingBehind ? LogWarning : LogInformation, "IcingaDB");
+			log << "Pending config and state updates: " << seqView.size() << " (Redis queries: "
+				<< (m_RconWorker ? m_RconWorker->GetPendingQueryCount() : 0);
+			if (!seqView.empty()) {
+				log << ", oldest item age: ";
+				if (auto age{now - seqView.front().EnqueueTime}; age < 1s) {
+					log << ch::duration_cast<ch::milliseconds>(age).count() << "ms";
+				} else {
+					log << ch::duration_cast<ch::seconds>(age).count() << "s";
+				}
+			}
+			log << ").";
+		}
+
 		if (!m_PendingItems.empty() && m_RconWorker && m_RconWorker->IsConnected() && m_RconWorker->GetPendingQueryCount() < maxPendingQueries) {
-			auto now = ch::steady_clock::now();
 			auto it = seqView.begin();
 			if (auto age = now - it->EnqueueTime; minItemAge > age) {
 				m_PendingItemsCV.wait_for(lock, minItemAge - age);
@@ -416,4 +443,31 @@ void IcingaDB::EnqueueRelationsDeletion(const String& id, icingadb::task_queue::
 		}
 	}
 	m_PendingItemsCV.notify_one();
+}
+
+/**
+ * Load statistics about the pending items queue into the provided perfdata array.
+ *
+ * This function retrieves statistics about the pending items queue, such as the current queue size and
+ * the age of the oldest item, and adds them to the provided perfdata array as performance data values.
+ *
+ * @param perfdata The array to which the pending items statistics will be added.
+ */
+void IcingaDB::LoadPendingItemsStats(const Array::Ptr& perfdata) const
+{
+	namespace ch = std::chrono;
+
+	std::size_t queueSize = 0;
+	double oldestItemAge{0};
+	{
+		std::lock_guard lock(m_PendingItemsMutex);
+		queueSize = m_PendingItems.size();
+		if (auto& seqView = m_PendingItems.get<1>(); !seqView.empty()) {
+			oldestItemAge = ch::duration_cast<ch::duration<double>>(
+				ch::steady_clock::now() - seqView.front().EnqueueTime
+			).count();
+		}
+	}
+	perfdata->Add(new PerfdataValue("icinga2_pending_config_and_state_updates_count", static_cast<double>(queueSize)));
+	perfdata->Add(new PerfdataValue("icinga2_pending_config_and_state_updates_backlog", oldestItemAge, false, "seconds"));
 }

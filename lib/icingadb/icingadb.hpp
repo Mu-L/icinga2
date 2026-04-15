@@ -242,6 +242,8 @@ public:
 		return m_RconLocked.load();
 	}
 
+	void LoadPendingItemsStats(const Array::Ptr& perfdata) const;
+
 	template<class T>
 	static void AddKvsToMap(const Array::Ptr& kvs, T& map)
 	{
@@ -469,7 +471,7 @@ private:
 
 	std::thread m_PendingItemsThread; // The background worker thread (consumer of m_PendingItems).
 	icingadb::task_queue::PendingItemsSet m_PendingItems; // Container for pending items with dirty bits (access protected by m_PendingItemsMutex).
-	std::mutex m_PendingItemsMutex; // Mutex to protect access to m_PendingItems.
+	mutable std::mutex m_PendingItemsMutex; // Mutex to protect access to m_PendingItems.
 	std::condition_variable m_PendingItemsCV; // Condition variable to forcefully wake up the worker thread.
 
 	void PendingItemsThreadProc();

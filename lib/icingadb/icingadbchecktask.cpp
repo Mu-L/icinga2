@@ -479,6 +479,7 @@ void IcingadbCheckTask::ScriptFunc(const Checkable::Ptr& checkable, const CheckR
 		perfdata->Add(new PerfdataValue(String("icinga2_") + subject.Name + "_items_5mins", (redis.get()->*subject.Getter)(5 * 60, now), false, "", Empty, Empty, 0));
 		perfdata->Add(new PerfdataValue(String("icinga2_") + subject.Name + "_items_15mins", (redis.get()->*subject.Getter)(15 * 60, now), false, "", Empty, Empty, 0));
 	}
+	conn->LoadPendingItemsStats(perfdata);
 
 	ServiceState state;
 	std::ostringstream msgbuf;
