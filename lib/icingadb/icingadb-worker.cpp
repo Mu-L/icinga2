@@ -163,7 +163,18 @@ void IcingaDB::ProcessQueueItem(const icingadb::task_queue::PendingConfigItem& i
 			UpdateState(checkable, item.DirtyBits);
 		}
 		if (item.DirtyBits & queue::NextUpdate) {
-			SendNextUpdate(checkable);
+			std::string_view redisKey;
+			if (dynamic_pointer_cast<Service>(checkable)) {
+				redisKey = CONFIG_REDIS_KEY_PREFIX "nextupdate:service";
+			} else {
+				redisKey = CONFIG_REDIS_KEY_PREFIX "nextupdate:host";
+			}
+			auto ID = GetObjectIdentifier(checkable);
+			if (checkable->GetEnableActiveChecks() && !checkable->GetExtension("ConfigObjectDeleted")) {
+				m_RconWorker->FireAndForgetQuery({"ZADD", redisKey, Convert::ToString(checkable->GetNextUpdate()), ID});
+			} else {
+				m_RconWorker->FireAndForgetQuery({"ZREM", redisKey, ID});
+			}
 		}
 	}
 }

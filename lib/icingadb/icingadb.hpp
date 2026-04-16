@@ -325,7 +325,6 @@ private:
 	void SendAddedComment(const Comment::Ptr& comment);
 	void SendRemovedComment(const Comment::Ptr& comment);
 	void SendFlappingChange(const Checkable::Ptr& checkable, double changeTime, double flappingLastChange);
-	void SendNextUpdate(const Checkable::Ptr& checkable) const;
 	void SendAcknowledgementSet(const Checkable::Ptr& checkable, const String& author, const String& comment, AcknowledgementType type, bool persistent, double changeTime, double expiry);
 	void SendAcknowledgementCleared(const Checkable::Ptr& checkable, const String& removedBy, double changeTime, double ackLastChange);
 	void SendNotificationUsersChanged(const Notification::Ptr& notification, const Array::Ptr& oldValues, const Array::Ptr& newValues);

@@ -1326,9 +1326,6 @@ void IcingaDB::InsertCheckableDependencies(
  */
 void IcingaDB::UpdateState(const Checkable::Ptr& checkable, uint32_t mode)
 {
-	if (!m_RconWorker || !m_RconWorker->IsConnected())
-		return;
-
 	Dictionary::Ptr stateAttrs = SerializeState(checkable);
 
 	String checksum = HashValue(stateAttrs);
@@ -1767,9 +1764,6 @@ IcingaDB::CreateConfigUpdate(const ConfigObject::Ptr& object, const QueryArgPair
 	if (!runtimeUpdate && m_ConfigDumpInProgress)
 		return;
 	*/
-
-	if (m_RconWorker == nullptr)
-		return;
 
 	Dictionary::Ptr attr = new Dictionary;
 
@@ -2450,31 +2444,6 @@ void IcingaDB::SendFlappingChange(const Checkable::Ptr& checkable, double change
 	xAdd.emplace_back(HashValue(new Array({m_EnvironmentId, checkable->GetName(), startTs})));
 
 	m_HistoryBulker.ProduceOne(std::move(xAdd));
-}
-
-void IcingaDB::SendNextUpdate(const Checkable::Ptr& checkable) const
-{
-	if (!m_RconWorker || !m_RconWorker->IsConnected())
-		return;
-
-	if (checkable->GetEnableActiveChecks() && !checkable->GetExtension("ConfigObjectDeleted")) {
-		m_RconWorker->FireAndForgetQuery(
-			{
-				"ZADD",
-				dynamic_pointer_cast<Service>(checkable) ? "icinga:nextupdate:service" : "icinga:nextupdate:host",
-				Convert::ToString(checkable->GetNextUpdate()),
-				GetObjectIdentifier(checkable)
-			}
-		);
-	} else {
-		m_RconWorker->FireAndForgetQuery(
-			{
-				"ZREM",
-				dynamic_pointer_cast<Service>(checkable) ? "icinga:nextupdate:service" : "icinga:nextupdate:host",
-				GetObjectIdentifier(checkable)
-			}
-		);
-	}
 }
 
 void IcingaDB::SendAcknowledgementSet(const Checkable::Ptr& checkable, const String& author, const String& comment, AcknowledgementType type, bool persistent, double changeTime, double expiry)
