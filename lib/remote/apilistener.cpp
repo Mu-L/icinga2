@@ -743,7 +743,8 @@ void ApiListener::NewClientHandlerInternal(
 		}
 
 		Log(LogCritical, "ApiListener")
-			<< "Client TLS handshake failed (" << conninfo << "): " << ec.message();
+			<< (role == RoleClient ? "Client" : "Server")
+			<< " TLS handshake failed (" << conninfo << "): " << ec.message();
 		return;
 	}
 
