@@ -123,8 +123,8 @@ void CpuBoundWork::Done()
 			}
 
 			// Again, a delayed wake-up is fine, hence unlocked.
-			for (auto& [strand, cv] : subscribers) {
-				boost::asio::post(strand, [cv = std::move(cv)] { cv->NotifyOne(); });
+			for (auto& subscriber : subscribers) {
+				boost::asio::post(subscriber.first, [cv = std::move(subscriber.second)] { cv->NotifyOne(); });
 			}
 		}
 	}
