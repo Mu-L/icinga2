@@ -82,7 +82,7 @@ public:
 	void ResetStream()
 	{
 		if (std::holds_alternative<Shared<AsioTlsStream>::Ptr>(m_Stream)) {
-			m_Stream = Shared<AsioTlsStream>::Make(IoEngine::Get().GetIoContext(), *m_SslContext);
+			m_Stream = Shared<AsioTlsStream>::Make(IoEngine::Get().GetIoContext(), *m_SslContext, "localhost");
 		} else {
 			m_Stream = Shared<AsioTcpStream>::Make(IoEngine::Get().GetIoContext());
 		}

@@ -17,7 +17,7 @@ public:
 	{
 		m_PdwSslContext = MakeContext("client");
 
-		m_Conn = new PerfdataWriterConnection{"Test", "test", "127.0.0.1", std::to_string(GetPort()), m_PdwSslContext};
+		m_Conn = new PerfdataWriterConnection{"Test", "test", "localhost", std::to_string(GetPort()), m_PdwSslContext};
 	}
 
 	auto& GetConnection() { return *m_Conn; }
