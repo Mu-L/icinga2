@@ -48,9 +48,9 @@ void OTLPMetricsWriter::StatsFunc(const Dictionary::Ptr& status, const Array::Pt
 			{"data_buffer_bytes", messageSize},
 		});
 
-		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_work_queue_items", workQueueSize, true));
+		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_work_queue_items", workQueueSize));
 		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_work_queue_item_rate", workQueueItemRate));
-		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_data_buffer_items", dataPointsCount, true));
+		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_data_buffer_items", dataPointsCount));
 		perfdata->Add(new PerfdataValue("otlpmetricswriter_" + name + "_data_buffer_bytes", messageSize, false, "bytes"));
 	}
 	status->Set("otlpmetricswriter", new Dictionary{std::move(statusData)});
