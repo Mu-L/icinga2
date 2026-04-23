@@ -120,6 +120,17 @@ We will also no longer provide 32bit Windows MSIs via Chocolatey (#10757).
 * OpenSSL shipped on Windows updated to 3.5.6: #10786
 * Boost version shipped on Windows updated to 1.90: #10669
 
+## 2.15.3 (2026-04-23)
+
+This is a small release containing a few bugfixes backported from the v2.16.0 release.
+
+We will also no longer provide 32bit Windows MSIs via Chocolatey (#10761).
+
+* Bump OpenSSL shipped for Windows to v3.0.20: #10793
+* Fixed a race condition in the `v1/console` handler: #10755, and #10740
+* Fix double-free error in `posix_error::what()`: #10742
+* InfluxDBWriter: print full HTTP error body when request fails: #10739
+
 ## 2.15.2 (2026-01-29)
 
 This security release fixes a problem in the Icinga 2 Windows MSI that did not
